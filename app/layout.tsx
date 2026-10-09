@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeInitScript } from "@/components/theme/theme-init-script";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 
@@ -27,9 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <ThemeInitScript />
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeProvider>{children}</ThemeProvider>

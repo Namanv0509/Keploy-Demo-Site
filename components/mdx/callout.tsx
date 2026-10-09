@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Info, AlertTriangle, Lightbulb, PartyPopper } from 'lucide-react'
 
 type CalloutProps = {
   title?: string;
@@ -6,13 +7,11 @@ type CalloutProps = {
   children: ReactNode;
 };
 
-const styles: Record<NonNullable<CalloutProps["type"]>, string> = {
-  info: "border-keploy bg-keploy/10 text-[#8a4b22] dark:bg-keploy/15 dark:text-[#ffb380]",
-  tip: "border-[#2da44e] bg-[#dafbe1] text-[#116329] dark:bg-[#122117] dark:text-[#7ee787]",
-  warning:
-    "border-[#bf8700] bg-[#fff8c5] text-[#7d4e00] dark:bg-[#2a1f00] dark:text-[#f0c14a]",
-  success:
-    "border-[#2da44e] bg-[#dafbe1] text-[#116329] dark:bg-[#122117] dark:text-[#7ee787]",
+const styles = {
+  info: {"icon": Info, "cls": "border-sky-400 bg-sky-50 text-sky-950 dark:bg-sky-950 dark:text-sky-100"},
+  tip: {"icon": Lightbulb, "cls": "border-emerald-400 bg-emerald-50 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100"},
+  warning: {"icon": AlertTriangle, "cls": "border-amber-400 bg-amber-50 text-amber-950 dark:bg-amber-950 dark:text-amber-100"},
+  success: {"icon": PartyPopper, "cls": "border-green-500 bg-green-50 text-green-950 dark:bg-green-950 dark:text-green-100"},
 };
 
 export default function Callout({
@@ -20,12 +19,16 @@ export default function Callout({
   type = "info",
   children,
 }: CalloutProps) {
+   const { icon: Icon, cls } = styles[type]
   return (
     <aside
-      className={`my-6 rounded-r-lg border-l-4 p-4 font-mono text-sm leading-relaxed ${styles[type]}`}
+      className={`my-6 rounded-r-lg border-l-4 p-4 text-sm leading-relaxed ${cls}`}
       role="note"
     >
-      {title ? <p className="mb-2 font-bold">{title}</p> : null}
+      <div className="mb-2 flex items-center gap-2">
+        <Icon className="h-5 w-5" />
+        {title ? <p className="font-semibold">{title}</p> : null}
+      </div>
       <div>{children}</div>
     </aside>
   );

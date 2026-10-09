@@ -12,13 +12,22 @@
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.4.0",
+    "@rehype-pretty/transformers": "^0.13.2",
     "@types/mdx": "^2.0.14",
+    "lucide-react": "^1.55.0",
     "next": "16.4.0",
+    "next-themes": "^0.4.6",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "rehype-pretty-code": "^0.14.5",
+    "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-gfm-configurable": "^1.0.0",
+    "shiki": "^4.5.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
+    "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -28,6 +37,6 @@
     "typescript": "^5"
   },
   "registries": {
-"@ss-components": "https://ss-components.com/registry"
+    "@ss-components": "https://ss-components.com/registry"
   }
 }

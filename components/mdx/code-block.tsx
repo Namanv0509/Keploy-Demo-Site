@@ -1,42 +1,43 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState, useRef } from "react";
+import { Check, Copy } from "lucide-react";
 
-type CodeBlockProps = {
-  code: string;
-  language?: string;
-};
-
-export default function CodeBlock({ code, language }: CodeBlockProps) {
+export function CodeBlock({
+  children,
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<"pre">) {
   const [copied, setCopied] = useState(false);
+  const preRef = useRef<HTMLPreElement>(null);
 
-  const copy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }, [code]);
+  const handleCopy = async () => {
+    if (!preRef.current) return;
+    const text = preRef.current.innerText || preRef.current.textContent || "";
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className="group relative my-6 overflow-hidden rounded-lg border border-[#1e2127] bg-terminal shadow-sm">
-      <div className="flex items-center justify-between border-b border-white/10 bg-[#21252b] px-4 py-2">
-        <span className="font-mono text-xs uppercase tracking-wide text-white/60">
-          {language || "code"}
-        </span>
-        <button
-          type="button"
-          onClick={copy}
-          className="rounded px-2.5 py-1 font-mono text-xs text-white/80 transition hover:bg-white/10 hover:text-white"
-          aria-label={copied ? "Copied" : "Copy code"}
-        >
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
-      <pre className="terminal overflow-x-auto p-4 text-[13px] leading-relaxed">
-        <code className="font-mono text-white/95">{code}</code>
+    <div className="relative group my-4">
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="absolute top-2.5 right-2.5 z-10 inline-flex items-center justify-center p-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 shadow-sm"
+      >
+        {copied ? (
+          <Check className="w-3.5 h-3.5 text-emerald-500" />
+        ) : (
+          <Copy className="w-3.5 h-3.5" />
+        )}
+      </button>
+      <pre
+        ref={preRef}
+        className={`${className ?? ""} overflow-x-auto rounded-lg p-4 text-sm`}
+        {...props}
+      >
+        {children}
       </pre>
     </div>
   );

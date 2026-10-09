@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
-import createMDX from '@next/mdx'
+import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
-  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
-  /* config options here */
+  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   experimental: {
     agentFeedback: true,
   },
@@ -20,8 +19,22 @@ const nextConfig: NextConfig = {
 };
 
 const withMDX = createMDX({
-  extension: /\.(md|mdx)$/,
-  // Add markdown plugins here, as desired
-})
+  options: {
+    remarkPlugins: ["remark-gfm"],
+    rehypePlugins: [
+      "rehype-slug",
+      [
+        "rehype-pretty-code",
+        {
+          theme: {
+            light: "github-light",
+            dark: "github-dark",
+          },
+          keepBackground: false,
+        },
+      ],
+    ],
+  },
+});
 
-export default withMDX(nextConfig)
+export default withMDX(nextConfig);

@@ -1,33 +1,20 @@
 "use client";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
 
-import { useTheme } from "./theme-provider";
-
-export default function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
-
+export function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="h-9 w-9" />;
   return (
-    <div className="theme-toggle">
-      <span
-        className={`theme-toggle__label ${!isDark ? "theme-toggle__label--active" : ""}`}
-      >
-        Light
-      </span>
-      <button
-        type="button"
-        className="theme-toggle__track"
-        data-theme={theme}
-        onClick={toggleTheme}
-        aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
-        aria-pressed={isDark}
-      >
-        <span className="theme-toggle__thumb" />
-      </button>
-      <span
-        className={`theme-toggle__label ${isDark ? "theme-toggle__label--active" : ""}`}
-      >
-        Dark
-      </span>
-    </div>
+    <button
+      aria-label="Toggle theme"
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      className="rounded-md border p-2 hover:bg-black/5 dark:hover:bg-white/10"
+    >
+      {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+    </button>
   );
 }

@@ -12,7 +12,7 @@ const CONTENT_SELECTOR = "[data-docs-content]";
 
 export default function TableOfContents() {
   const [items, setItems] = useState<TocItem[]>([]);
-  const [activeId, setActiveId] = useState<string>("");
+  const [activeId, setActiveId] = useState("");
 
   useEffect(() => {
     const root = document.querySelector(CONTENT_SELECTOR);
@@ -53,21 +53,21 @@ export default function TableOfContents() {
   }
 
   return (
-    <nav aria-label="Table of contents" className="toc-nav">
-      <p className="mb-3 font-mono text-xs font-bold uppercase tracking-wider text-keploy">
+    <nav aria-label="Table of contents">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
         On this page
       </p>
-      <ul className="space-y-1 border-l border-docs-border">
+      <ul className="space-y-1 border-l">
         {items.map((item) => (
           <li key={item.id}>
             <a
               href={`#${item.id}`}
-              className={`block border-l-2 py-1 pl-3 font-mono text-sm leading-snug transition hover:text-keploy ${
-                item.level === 3 ? "ml-2 text-[13px]" : ""
+              className={`block border-l-2 py-1 pl-3 text-sm leading-snug ${
+                item.level === 3 ? "ml-2 text-xs" : ""
               } ${
                 activeId === item.id
-                  ? "border-keploy font-medium text-keploy"
-                  : "border-transparent text-docs-muted"
+                  ? "border-foreground font-medium"
+                  : "border-transparent text-neutral-500"
               }`}
             >
               {item.text}

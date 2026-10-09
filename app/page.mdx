@@ -1,21 +1,25 @@
+export const metadata = {
+  title: "Test a Go URL Shortener with Keploy",
+  description:
+    "Tutorial on using Keploy with a sample Go URL Shortener to record and replay tests.",
+};
+
 <DocsLayout>
 ![Keploy logo](/keploy-logo-dark.svg)
 
-# Why Keploy?
-
-When you build Go applications, testing external dependencies usually means mock servers, disposable test databases, or writing hundreads of test cases for a decent code coverage.
+When you build any application testing means either writing hundreads of test cases for a decent code coverage or using mocks to mock every dependency.
 
 **Keploy** records your application's real network traffic during development and turns it into replayable API tests.
 
-**We will be seeing that in action in this quickstart guide using a sample Echo SQL application**
+**We will be seeing that in action in this quickstart guide using a sample Go URL Shortener application**
 
 ---
 
 # Echo SQL Sample Application
 
-This guide walks through the **[echo-sql URL shortener](https://github.com/keploy/samples-go/tree/main/echo-sql)** sample (Echo + PostgreSQL) and test Keploy integration
+This guide walks through the **[echo-sql URL shortener](https://github.com/keploy/samples-go/tree/main/echo-sql)** sample (Echo + PostgreSQL) and see how Keploy record API traffics and replay them as automated test.
 
-## What you'll learn
+## # What you'll learn
 
 **By the end of this tutorial you will:**
 
@@ -25,23 +29,15 @@ This guide walks through the **[echo-sql URL shortener](https://github.com/keplo
 4. Understand what lives under the `keploy/` folder
 5. What can you learn next?
 
-<Callout type="info" title="Who this is for">
-  New Keploy users who want a walkthrough of basic commands. If you already have
-  a `keploy/` directory, run **`keploy status`** in your project, it prints the
-  next recommended command for your repo. :)
-</Callout>
+## # Before we Start
 
----
-
-## Prerequisites
+Make sure you have installed the following tools:
 
 1. [Go 1.20+](https://go.dev/doc/install)
 2. [Docker](https://www.docker.com/get-started/)
 3. [Keploy CLI](https://keploy.io/docs/server/installation/)
 
----
-
-## Let's Get Started
+## # Let's Get Started
 
 <Steps>
 
@@ -54,28 +50,22 @@ git clone https://github.com/keploy/samples-go.git
 cd samples-go/echo-sql
 go mod download
 ```
+Go to `main.go` file and update Postgres host.
+
+```diff
++ host: "postgresDb",   // required when using Docker Compose
+- host: "localhost", // only if you run the binary natively
+```
+> If you plan to run the app natively (outside Docker), change the host to "localhost" and build the binary: `go build -o echo-psql-url-shortener .`
+
+This guide uses the Docker Compose path for both record and test,
+so keep `host: "postgresDb",`
 
 Start PostgreSQL (only needed while recording):
 
 ```bash
-docker-compose up -d postgres
+docker compose up -d postgres
 ```
-
-Confirm the Postgres host in `main.go` is set for Docker Compose:
-
-```bash
-host: "postgresDb",   // required when using Docker Compose
-// host: "localhost", // only if you run the binary natively
-```
-
-If you plan to run the app natively (outside Docker), change the host to "localhost" and build the binary:
-
-```bash
-go build -o echo-psql-url-shortener .
-```
-
-This guide uses the Docker Compose path for both record and test,
-so keep `host: "postgresDb",`
 
 </Step>
 
@@ -87,9 +77,24 @@ Before we start testing the url shortener, lets start record with keploy:
 keploy record -c "docker compose up" --container-name "echoApp" --build-delay 50
 ```
 
-This will create a `/keploy` folder in directory, we will cover about that in detail later. 👀
+<Callout type="info" title="Observe 👀">
+  As you can see, a new file named **`keploy-logs.txt`** is formed along with
+  **`docker-compose-tmp.yaml`** and **`keploy.yml`**. We will cover about them
+  in depth later on this page.
+</Callout>
 
-While the server is running, start making requests.
+in `keploy-logs.txt` you can see it says, Keploy agent is ready to record test cases and mocks
+```bash
+🐰 Keploy: 2026-10-12T06:07:18.258469+05:30 	[34mINFO[0m	Starting Keploy	{"version": "3.8.65", "apiServerURL": "https://api.keploy.io", "inDocker": false}
+🐰 Keploy: 2026-10-12T06:07:20.584029+05:30 	[34mINFO[0m	agent replay posture resolved	{"replaying": false, "cmd": "record", "mode": "", "daemonset": false}
+🐰 Keploy: 2026-10-12T06:07:20.590478+05:30 	[34mINFO[0m	Running application using a temporary Keploy-generated Docker Compose file (will be cleaned up automatically)	{"cmd": "docker compose -f ./docker-compose-tmp.yaml up --abort-on-container-exit --exit-code-from go-app", "composePath": "docker-compose-tmp.yaml"}
+🐰 Keploy: 2026-10-12T06:07:20.590528+05:30 	[34mINFO[0m	Waiting for keploy-agent to be ready for docker compose...	{"Agent-uri": "http://localhost:57363/agent"}
+🐰 Keploy: 2026-10-12T06:07:20.662117+05:30 	[34mINFO[0m	Starting Application:	{"executing_cmd": "/bin/sh -c docker compose -f ./docker-compose-tmp.yaml up --abort-on-container-exit --exit-code-from go-app"}
+🐰 Keploy: 2026-10-12T06:07:21.631206+05:30 	[34mINFO[0m	Keploy agent is ready to record test cases and mocks.
+```
+
+
+Since it has started to record and server is running, lets make a request.
 
 For example:
 
@@ -133,6 +138,11 @@ Stop or remove the Postgres container to prove mocks work:
 docker stop postgresDb
 ```
 
+<Callout type="info" title="Observe 👀">
+  As you can observe, the **`keploy-log.txt`** file is now removed and all the
+  recorded tests are saved in the **`keploy/`** folder.
+</Callout>
+
 Run the suite:
 
 ```bash
@@ -150,6 +160,23 @@ You will see the ouput like this:
 
 ![test](/test_sucess.png)
 
+```bash
+
+ <=========================================> 
+  COMPLETE TESTRUN SUMMARY. 
+        Total tests: 1
+        Total test passed: 1
+        Total test failed: 0
+        Total time taken: "12.11 s"
+
+        Test Suite Name         Total Test      Passed          Failed          Time Taken
+
+        "test-set-0"            1               1               0               "12.11 s"
+<=========================================> 
+```
+The request which we sent was recorded and sent to the app, and app returned the response and Keploy compared it with the recorded response and if it matches then it is considered as a pass (As we can see above).
+
+
 Isn't this exciting to see your test running without any db running? and the best part is, you didnt have to write any test
 it was all just the recorded tarffic 🧑‍💻👩‍💻 **That's the magic of Keploy** ✨
 
@@ -164,6 +191,26 @@ it was all just the recorded tarffic 🧑‍💻👩‍💻 **That's the magic o
 </Steps>
 
 # Let's take a deep dive
+
+## What happens behind the scenes?
+
+While recording, Keploy creates a few temporary files alongside your project. Let's walk through each of them:
+
+### - `keploy-log.txt`
+
+During recording, Keploy creates a **`keploy-log.txt`** file in your project directory. If you peek inside while the recorder is running, you'll notice that every API request you make is logged here **with timestamps**. It acts as a live journal of captured traffic as you `curl` endpoints, each request and its metadata appear in this file in real time.
+
+![Keploy Logs](/keploy-logs.png)
+
+Once you stop the recorder (`Ctrl+C`), Keploy processes these logs, converts them into structured test cases, and stores them in the **`keploy/`** folder.
+
+### - `docker-compose-tmp.yaml`
+
+When you run `keploy record` with a `docker compose up` command, Keploy generates a **`docker-compose-tmp.yaml`** file with the changes needed to intercept network traffic, including the Keploy agent and its configuration. Your original Compose file remains unchanged.
+
+### - `keploy.yml`
+
+This is Keploy’s configuration file. It stores settings such as the application name, container name, command to run, and test case naming preferences.
 
 ## What's inside `keploy/`?
 
@@ -200,7 +247,7 @@ The same echo-sql repo can grow with more CLI workflows without changing how you
 
 - **`keploy status`** — from the project root; prints what to run next (re-record, CI, fixes).
 - **`keploy mock record` / `keploy mock replay`** — wrap `go test ./...` to record dependency traffic during tests and replay offline.
-- **`keploy test --mappings`** — helps when several tests hit similar SQL and mocks need to stay pinned per case.
+- **`keploy test --mappings`** helps when several tests hit similar SQL and mocks need to stay pinned per case.
 
 Checkout the **[Keploy documentation](https://keploy.io/docs/)** to understand what more Keploy can do for you.
 
@@ -212,7 +259,15 @@ Checkout the **[Keploy documentation](https://keploy.io/docs/)** to understand w
   functions or entire files.
 </Callout>
 
-## What to learn next ? Checkout these 
+## Want to test with a demo traffic?
+
+[Download This Demo Traffic](/demo_traffic.sh)
+
+run `bash demo_traffic.sh` to test with demo traffic with keploy recording.
+
+## What to learn next ? Checkout these
+
+<ScrollTop />
 
 - [Keploy CLI commands](https://keploy.io/docs/running-keploy/cli-commands/) - Want to know what other commands can be used with Keploy CLI, head over to this page.
 - [Keploy docs](https://keploy.io/docs/) — Get a detailed overview of Keploy features and advanced workflows.
