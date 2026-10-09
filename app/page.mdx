@@ -1,0 +1,222 @@
+<DocsLayout>
+![Keploy logo](/keploy-logo-dark.svg)
+
+# Why Keploy?
+
+When you build Go applications, testing external dependencies (PostgreSQL, Redis, third-party HTTP APIs) usually means mock servers, disposable test databases, or writing hundreads of test cases.
+
+**Keploy** records your application's real network traffic during development and turns it into replayable API tests.
+
+**We will be seeing that in action in this quickstart guide using a sample Echo SQL application**
+
+---
+
+# Echo SQL Sample Application
+
+This guide walks through the **[echo-sql URL shortener](https://github.com/keploy/samples-go/tree/main/echo-sql)** sample (Echo + PostgreSQL) and test Keploy integration
+
+## What you'll learn
+
+**By the end of this tutorial you will:**
+
+1. Clone and run the sample app with Docker Postgres
+2. **Record** HTTP requests and database traffic with `keploy record`
+3. **Replay** tests with Postgres stopped (`keploy test`)
+4. Understand what lives under the `keploy/` folder
+5. What can you learn next?
+
+<Callout type="info" title="Who this is for">
+  New Keploy users who want a documentation-style walkthrough. If you already
+  have a `keploy/` directory, run **`keploy status`** in your project, it prints
+  the next recommended command for your repo. :)
+</Callout>
+
+---
+
+## Prerequisites
+
+1. [Go 1.20+](https://go.dev/doc/install)
+2. [Docker](https://www.docker.com/get-started/)
+3. [Keploy CLI](https://keploy.io/docs/server/installation/)
+
+---
+
+## Let's Get Started
+
+<Steps>
+
+<Step number={1} title="Get the sample app">
+
+Clone the Go samples and install modules:
+
+```bash
+git clone https://github.com/keploy/samples-go.git
+cd samples-go/echo-sql
+go mod download
+```
+
+Start PostgreSQL (only needed while recording):
+
+```bash
+docker-compose up -d postgres
+```
+
+Confirm the Postgres host in main.go is set for Docker Compose:
+
+```bash
+host: "postgresDb",   // required when using Docker Compose
+// host: "localhost", // only if you run the binary natively
+```
+
+If you plan to run the app natively (outside Docker), change the host to "localhost" and build the binary:
+
+```bash
+go build -o echo-psql-url-shortener .
+```
+
+This guide uses the Docker Compose path for both record and test,
+so keep `host: "postgresDb",`
+
+</Step>
+
+<Step number={2} title="Send a request and Record with Keploy">
+
+Before we start testing the url shortener, lets start record with keploy:
+
+```bash
+keploy record -c "docker compose up" --container-name "echoApp" --build-delay 50
+```
+
+This will create a `/keploy` folder in directory, we will cover about in detail later. 👀
+
+While the server is running, start making requests to the server.
+
+For example:
+
+```bash
+curl --request POST --url http://localhost:8082/url \
+  --header 'content-type: application/json' \
+  --data '{"url": "https://github.com"}'
+```
+
+This will return a shortned URL like:
+
+```bash
+{
+  "ts":1791529656143906000,
+  "url":"http://localhost:8082/4KepjkTT"
+}
+```
+
+Congrats 🎉, you have recorded your first test case with Keploy.
+You can check the recorded test case in `keploy/` directory. (and as well use the shortned URL to test the url shortner)
+
+<Callout type="success" title="What just happened?">
+  Keploy captured the **incoming HTTP** request/response and the **outgoing
+  PostgreSQL** conversation. Both are stored as YAML under `keploy/`—API tests
+  in `tests/`.
+</Callout>
+
+You can stop recording with `Ctrl+C`. You should see a folder such
+
+as `keploy/test-set-0/` with `tests/*.yaml` and mock data.
+
+</Step>
+
+<Step number={3} title="Its Time to see if it works as Expected 🤞">
+
+Stop or remove the Postgres container to prove mocks work:
+
+```bash
+docker stop postgresDb
+```
+
+Run the suite:
+
+```bash
+keploy test -c "docker compose up" --container-name "echoApp" --build-delay 50 --delay 10
+```
+
+Keploy will:
+
+1. Start your application
+2. Replay the recorded HTTP request
+3. Intercept Postgres calls and return recorded responses
+4. Diff the HTTP response against the golden record
+
+You will see the ouput like this:
+
+![test](/test_sucess.png)
+
+Isn't this exciting to see your test running without any db running? and the best part is, you didnt have to write any test
+it was all just the recorded tarffic 🧑‍💻👩‍💻 **That's the magic of Keploy** ✨
+
+<Callout type="warning" title="Database connection during record">
+  If the app points at the wrong Postgres instance (for example a local server
+  instead of the Docker container), recording may capture the wrong traffic or
+  fail early. Confirm connection settings **before** you record.
+</Callout>
+
+</Step>
+
+</Steps>
+
+# Let's take a deep dive
+
+## What's inside `keploy/`?
+
+After recording, expect structure similar to:
+
+```text
+keploy/
+└── test-set-0/
+    ├── config.yaml      # test-set metadata, mock registry hash (for CI)
+    ├── tests/
+    │   └── *.yaml       # API test cases (request + expected response)
+    └── mocks.yaml       # large; often gitignored—fetched in CI by hash
+```
+
+<Callout type="tip" title="Name your suite">
+When you record more flows, tag them with metadata so teammates know what each set covers:
+
+```bash
+record -c "./echo-psql-url-shortener" \
+  --metadata 'name=url-shortener-post,description=Create short URL'
+```
+
+Commit **`tests/`**, **`config.yaml`**, and any **seed script** you use; follow your project's policy for `mocks.yaml` (many teams use the [Keploy mock registry](https://keploy.io/docs/keploy-cloud/keploy-console/) in CI instead of committing mocks).
+
+Find out more at [Keploy Record](https://keploy.io/docs/running-keploy/cli-commands/#record)
+
+</Callout>
+
+---
+
+## Beyond `record` and `test`: what else can you do?
+
+The same echo-sql repo can grow with more CLI workflows without changing how you develop day to day. A few entry points:
+
+- **`keploy status`** — from the project root; prints what to run next (re-record, CI, fixes).
+- **`keploy mock record` / `keploy mock replay`** — wrap `go test ./...` to record dependency traffic during tests and replay offline.
+- **`keploy test --mappings`** — helps when several tests hit similar SQL and mocks need to stay pinned per case.
+
+Checkout the **[Keploy documentation](https://keploy.io/docs/)** to understand what more Keploy can do for you.
+
+<Callout type="tip" title="Keploy in VS Code">
+  Install **[Keploy: AI Testing
+  Assistant](https://marketplace.visualstudio.com/items?itemName=Keploy.keployio)**
+  from the Visual Studio Marketplace to generate unit tests for Go and other
+  languages directly in your editor. You can generate tests for individual
+  functions or entire files.
+</Callout>
+
+## What to learn next ? Checkout these 👀
+
+- [Keploy CLI commands](https://keploy.io/docs/running-keploy/cli-commands/) - Get a detailed overview of Keploy CLI commands.
+- [Keploy docs](https://keploy.io/docs/) — Get a detailed overview of Keploy features and advanced workflows.
+- [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Keploy.keployio) —Try the AI-assisted unit and API testing in the your code editor
+- [More Quickstarts](https://keploy.io/docs/quickstart/quickstart-filter/) -Discover more quickstarts as you get started with Keploy.
+
+See you in next quickstart... :)
+
+</DocsLayout>
