@@ -3,7 +3,7 @@
 
 # Why Keploy?
 
-When you build Go applications, testing external dependencies (PostgreSQL, Redis, third-party HTTP APIs) usually means mock servers, disposable test databases, or writing hundreads of test cases.
+When you build Go applications, testing external dependencies usually means mock servers, disposable test databases, or writing hundreads of test cases for a decent code coverage.
 
 **Keploy** records your application's real network traffic during development and turns it into replayable API tests.
 
@@ -26,9 +26,9 @@ This guide walks through the **[echo-sql URL shortener](https://github.com/keplo
 5. What can you learn next?
 
 <Callout type="info" title="Who this is for">
-  New Keploy users who want a documentation-style walkthrough. If you already
-  have a `keploy/` directory, run **`keploy status`** in your project, it prints
-  the next recommended command for your repo. :)
+  New Keploy users who want a walkthrough of basic commands. If you already have
+  a `keploy/` directory, run **`keploy status`** in your project, it prints the
+  next recommended command for your repo. :)
 </Callout>
 
 ---
@@ -61,7 +61,7 @@ Start PostgreSQL (only needed while recording):
 docker-compose up -d postgres
 ```
 
-Confirm the Postgres host in main.go is set for Docker Compose:
+Confirm the Postgres host in `main.go` is set for Docker Compose:
 
 ```bash
 host: "postgresDb",   // required when using Docker Compose
@@ -87,24 +87,26 @@ Before we start testing the url shortener, lets start record with keploy:
 keploy record -c "docker compose up" --container-name "echoApp" --build-delay 50
 ```
 
-This will create a `/keploy` folder in directory, we will cover about in detail later. 👀
+This will create a `/keploy` folder in directory, we will cover about that in detail later. 👀
 
-While the server is running, start making requests to the server.
+While the server is running, start making requests.
 
 For example:
 
 ```bash
 curl --request POST --url http://localhost:8082/url \
   --header 'content-type: application/json' \
-  --data '{"url": "https://github.com"}'
+  --data '{"url": "https://keploy.io/docs/keploy-cloud/auto-test-generation/"}'
 ```
 
-This will return a shortned URL like:
+A short URL for keploy auto test generation isn't it nice to have.
+
+This will return a shortned URL like this one:
 
 ```bash
 {
   "ts":1791529656143906000,
-  "url":"http://localhost:8082/4KepjkTT"
+  "url":"http://localhost:8082/hCoqyBqU"
 }
 ```
 
@@ -212,7 +214,7 @@ Checkout the **[Keploy documentation](https://keploy.io/docs/)** to understand w
 
 ## What to learn next ? Checkout these 👀
 
-- [Keploy CLI commands](https://keploy.io/docs/running-keploy/cli-commands/) - Get a detailed overview of Keploy CLI commands.
+- [Keploy CLI commands](https://keploy.io/docs/running-keploy/cli-commands/) - Want to know what other commands can be used with Keploy CLI, head over to this page.
 - [Keploy docs](https://keploy.io/docs/) — Get a detailed overview of Keploy features and advanced workflows.
 - [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Keploy.keployio) —Try the AI-assisted unit and API testing in the your code editor
 - [More Quickstarts](https://keploy.io/docs/quickstart/quickstart-filter/) -Discover more quickstarts as you get started with Keploy.
